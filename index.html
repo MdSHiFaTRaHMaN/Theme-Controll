@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopify Multi-Store Controller Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-info">
+        <h1>StoreCommand Hub</h1>
+        <span class="brand-subtitle">Shopify Multi-Store Remote Controller</span>
+      </div>
+    </div>
+    
+    <div class="nav-center-stats">
+      <div class="nav-stat-pill">
+        <span class="stat-dot green"></span>
+        <span>Live Stores: <strong id="stat-live-count">0</strong></span>
+      </div>
+      <div class="nav-stat-pill">
+        <span class="stat-dot amber"></span>
+        <span>Launch Soon: <strong id="stat-launch-count">0</strong></span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button type="button" class="btn btn-secondary" id="btn-view-leads">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>VIP Leads (<span id="stat-leads-count">0</span>)</span>
+      </button>
+      <button type="button" class="btn btn-secondary" id="btn-snippet-code">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>Theme Snippet Code</span>
+      </button>
+      <button type="button" class="btn btn-primary" id="btn-add-store">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Add Store</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="app-layout">
+    <!-- Sidebar: Store List -->
+    <aside class="sidebar-stores">
+      <div class="sidebar-header">
+        <h2>Your Stores (5-7)</h2>
+        <span class="store-badge-count" id="stat-total-stores">0 Stores</span>
+      </div>
+      
+      <div class="store-list" id="store-list-container">
+        <!-- Injected via app.js -->
+      </div>
+    </aside>
+
+    <!-- Main Content: Store Editor & Live Preview -->
+    <main class="main-editor-area">
+      <!-- Active Store Status Banner -->
+      <div class="store-top-bar">
+        <div class="active-store-meta">
+          <div class="store-avatar" id="edit-avatar">S</div>
+          <div>
+            <h2 class="active-store-name" id="edit-store-title">SinghClo Main Store</h2>
+            <div class="store-id-tag">Store ID: <code id="edit-store-id-tag">singhclo</code></div>
+          </div>
+        </div>
+
+        <div class="mode-switcher-container">
+          <span class="mode-label">Current Status:</span>
+          <div class="mode-toggle-group">
+            <button type="button" class="mode-toggle-btn active-live" id="toggle-mode-live">
+              <span class="mode-dot live"></span>
+              <span>🟢 Live Main Store</span>
+            </button>
+            <button type="button" class="mode-toggle-btn" id="toggle-mode-launch">
+              <span class="mode-dot launch"></span>
+              <span>⏳ Launch Soon Page</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor Columns -->
+      <div class="editor-grid">
+        <!-- Settings Form -->
+        <div class="editor-form-col">
+          <div class="card form-card">
+            <div class="card-header">
+              <h3>⚙️ Store & Launch Configuration</h3>
+              <p>Changes apply instantly to this store without logging into Shopify Admin.</p>
+            </div>
+
+            <form id="store-config-form">
+              <!-- General Info -->
+              <div class="form-section-title">General Brand Details</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-store-name">Dashboard Store Title</label>
+                  <input type="text" id="input-store-name" class="form-control" required placeholder="e.g. SinghClo Luxury">
+                </div>
+                <div class="form-group">
+                  <label for="input-brand-name">Displayed Brand Name</label>
+                  <input type="text" id="input-brand-name" class="form-control" required placeholder="e.g. SinghClo">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="input-logo-url">Brand Logo Image URL (Optional)</label>
+                <input type="url" id="input-logo-url" class="form-control" placeholder="https://your-domain.com/logo.png (leave blank for text logo)">
+              </div>
+
+              <!-- Launch Soon Content -->
+              <div class="form-section-title">Launch Soon Landing Page Content</div>
+              <div class="form-group">
+                <label for="input-headline">Hero Headline</label>
+                <textarea id="input-headline" rows="2" class="form-control" placeholder="Something Extraordinary Is On The Way"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="input-subtitle">Subtitle & Offer Description</label>
+                <textarea id="input-subtitle" rows="3" class="form-control" placeholder="We are crafting an exclusive shopping experience..."></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-launch-date">🎯 Target Launch Date & Time</label>
+                  <input type="datetime-local" id="input-launch-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="input-passcode">🔐 VIP Admin Bypass Passcode</label>
+                  <input type="text" id="input-passcode" class="form-control" placeholder="vip2026" required title="You can type this on the launch page to preview the live store">
+                </div>
+              </div>
+
+              <!-- Social Links -->
+              <div class="form-section-title">Social Media Links (Optional)</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-soc-fb">Facebook URL</label>
+                  <input type="url" id="input-soc-fb" class="form-control" placeholder="https://facebook.com/yourpage">
+                </div>
+                <div class="form-group">
+                  <label for="input-soc-ig">Instagram URL</label>
+                  <input type="url" id="input-soc-ig" class="form-control" placeholder="https://instagram.com/yourhandle">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-soc-tt">TikTok URL</label>
+                  <input type="url" id="input-soc-tt" class="form-control" placeholder="https://tiktok.com/@yourbrand">
+                </div>
+                <div class="form-group">
+                  <label for="input-soc-wa">WhatsApp Link</label>
+                  <input type="text" id="input-soc-wa" class="form-control" placeholder="https://wa.me/8801XXXXXXXXX">
+                </div>
+              </div>
+
+              <!-- Action Bar -->
+              <div class="form-actions">
+                <button type="submit" class="btn btn-save" id="btn-save-changes">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>💾 Save & Deploy Changes</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-copy-store-snippet">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  <span>Copy Liquid Tag</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Live Interactive Preview -->
+        <div class="editor-preview-col">
+          <div class="card preview-card">
+            <div class="preview-header">
+              <div class="preview-title">
+                <span class="live-indicator"></span>
+                <span>Live Interactive Preview</span>
+              </div>
+              <div class="preview-mode-tag" id="preview-mode-badge">Mode: LIVE</div>
+            </div>
+
+            <!-- Device Frame -->
+            <div class="device-mockup">
+              <div class="device-bar">
+                <span class="device-dot red"></span>
+                <span class="device-dot yellow"></span>
+                <span class="device-dot green"></span>
+                <div class="device-url-bar" id="preview-url-display">https://your-store.myshopify.com</div>
+              </div>
+
+              <div class="device-screen" id="preview-screen">
+                <!-- Dynamic Interactive Screen Preview -->
+                <div class="mock-launch-page" id="mock-launch-page">
+                  <div class="mock-orb orb-1"></div>
+                  <div class="mock-orb orb-2"></div>
+                  
+                  <div class="mock-content">
+                    <div class="mock-brand" id="mock-brand-display">SINGHCLO</div>
+                    <div class="mock-badge">✨ LAUNCHING SOON</div>
+                    <div class="mock-headline" id="mock-headline-display">Something Extraordinary<br>Is On The Way</div>
+                    <div class="mock-subtitle" id="mock-sub-display">We are crafting an exclusive shopping experience...</div>
+
+                    <div class="mock-timer">
+                      <div class="mock-t-box"><span id="mock-d">07</span><small>DAYS</small></div>
+                      <div class="mock-t-box"><span id="mock-h">14</span><small>HOURS</small></div>
+                      <div class="mock-t-box"><span id="mock-m">32</span><small>MINS</small></div>
+                      <div class="mock-t-box"><span id="mock-s">45</span><small>SECS</small></div>
+                    </div>
+
+                    <div class="mock-subscribe">
+                      <input type="text" placeholder="Enter your email..." disabled>
+                      <button type="button">Notify Me</button>
+                    </div>
+
+                    <div class="mock-footer">
+                      <div class="mock-socs">
+                        <span class="mock-soc-circle">f</span>
+                        <span class="mock-soc-circle">ig</span>
+                        <span class="mock-soc-circle">tk</span>
+                      </div>
+                      <div class="mock-admin-pill">🔐 VIP Pass: <strong id="mock-pass-display">vip2026</strong></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mock Live Store Screen (shown when in LIVE mode) -->
+                <div class="mock-live-page" id="mock-live-page" style="display:none;">
+                  <div class="mock-live-header">
+                    <span class="mock-live-brand" id="mock-live-brand-text">SINGHCLO</span>
+                    <div class="mock-live-nav">
+                      <span>Home</span>
+                      <span>Catalog</span>
+                      <span>Sale</span>
+                    </div>
+                  </div>
+                  <div class="mock-live-hero">
+                    <div class="mock-live-hero-tag">NEW COLLECTION 2026</div>
+                    <h3>Main Store Is Live & Active</h3>
+                    <p>Visitors can view and purchase all products normally.</p>
+                    <button class="mock-live-btn">Shop Now &rarr;</button>
+                  </div>
+                  <div class="mock-live-grid">
+                    <div class="mock-live-product"><div class="mock-img"></div><span>Product 1</span></div>
+                    <div class="mock-live-product"><div class="mock-img"></div><span>Product 2</span></div>
+                    <div class="mock-live-product"><div class="mock-img"></div><span>Product 3</span></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Add New Store -->
+  <div class="modal-backdrop" id="modal-add-store" style="display:none;">
+    <div class="modal-card">
+      <button class="modal-close" id="btn-close-add-modal">&times;</button>
+      <div class="modal-icon">🏪</div>
+      <h3>Add New Shopify Store</h3>
+      <p class="modal-desc">Create a new store profile to manage its Launch Soon and Live templates.</p>
+      
+      <form id="form-add-store">
+        <div class="form-group">
+          <label for="new-store-id">Store ID (Unique slug, no spaces)</label>
+          <input type="text" id="new-store-id" class="form-control" placeholder="e.g. brand4, fashionstore" required pattern="[a-zA-Z0-9-_]+">
+          <small class="form-help">Use this ID inside the Liquid tag: <code>{% render 'store-mode-controller', store_id: 'your_id' %}</code></small>
+        </div>
+        <div class="form-group">
+          <label for="new-store-name">Store Name</label>
+          <input type="text" id="new-store-name" class="form-control" placeholder="e.g. Fashion Hub Bangladesh" required>
+        </div>
+        <div class="form-group">
+          <label for="new-store-mode">Initial Status</label>
+          <select id="new-store-mode" class="form-control">
+            <option value="LIVE">🟢 Live Main Website</option>
+            <option value="LAUNCH_SOON" selected>⏳ Launch Soon (Coming Soon Page)</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-store">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Store Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: VIP Leads / Subscribers -->
+  <div class="modal-backdrop" id="modal-leads" style="display:none;">
+    <div class="modal-card modal-lg">
+      <button class="modal-close" id="btn-close-leads-modal">&times;</button>
+      <div class="modal-header-flex">
+        <div>
+          <h3>📬 VIP Email Leads Captured</h3>
+          <p class="modal-desc">Visitors who subscribed on your Launch Soon pages.</p>
+        </div>
+        <div class="leads-filter-actions">
+          <select id="select-leads-store-filter" class="form-control form-control-sm">
+            <option value="all">All Stores</option>
+          </select>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-export-csv">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Email Address</th>
+              <th>Store ID</th>
+              <th>Subscribed At</th>
+            </tr>
+          </thead>
+          <tbody id="leads-table-body">
+            <!-- Injected via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Liquid Snippet Instructions -->
+  <div class="modal-backdrop" id="modal-snippet" style="display:none;">
+    <div class="modal-card modal-lg">
+      <button class="modal-close" id="btn-close-snippet-modal">&times;</button>
+      <div class="modal-icon">📦</div>
+      <h3>How To Connect Any Shopify Store (1 File Only)</h3>
+      <p class="modal-desc">Follow these 2 simple steps on any of your 5-7 Shopify stores:</p>
+      
+      <div class="guide-steps">
+        <div class="guide-step">
+          <div class="step-badge">Step 1</div>
+          <div class="step-content">
+            <h4>Create Snippet in Shopify Theme</h4>
+            <p>In Shopify Admin &rarr; <strong>Online Store &rarr; Themes &rarr; Edit code</strong>, under <strong>Snippets</strong>, create a new snippet named <code>store-mode-controller.liquid</code> and paste the snippet code.</p>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-badge">Step 2</div>
+          <div class="step-content">
+            <h4>Add 1 Line to <code>layout/theme.liquid</code></h4>
+            <p>Open <code>layout/theme.liquid</code> and paste this 1 line right under the <code>&lt;body ...&gt;</code> tag:</p>
+            <div class="code-copy-box">
+              <code id="snippet-render-code">{% render 'store-mode-controller', store_id: 'singhclo' %}</code>
+              <button type="button" class="btn btn-copy" id="btn-copy-snippet-render">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-banner">
+        <strong>💡 Pro Tip:</strong> To preview the live store even when "Launch Soon" is active, enter your VIP passcode in the unlock modal or add <code>?vip_pass=YOUR_PASSCODE</code> to the store URL.
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-box"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
