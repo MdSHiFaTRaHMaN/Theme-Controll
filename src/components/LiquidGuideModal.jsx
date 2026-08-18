@@ -10,7 +10,7 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
 
   if (!isOpen) return null;
 
-  const storeId = selectedStore?.id || 'singhclo';
+  const storeId = selectedStore?.id || 'your_store_id';
   const autoTag = `{% render 'store-mode-controller' %}`;
   const customTag = `{% render 'store-mode-controller', store_id: '${storeId}' %}`;
 

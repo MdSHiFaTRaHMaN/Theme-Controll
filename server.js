@@ -13,52 +13,7 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-const DEFAULT_STORES = [
-  {
-    id: 'singhclo',
-    name: 'SinghClo Main Store',
-    mode: 'LIVE', // 'LIVE' or 'LAUNCH_SOON'
-    brandName: 'SinghClo',
-    logoUrl: '',
-    headline: 'Something Extraordinary\nIs On The Way',
-    subtitle: 'We are crafting an exclusive shopping experience curated just for you. Sign up for early VIP access and secret drops.',
-    launchDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    passcode: 'vip2026',
-    socials: {
-      fb: 'https://facebook.com',
-      ig: 'https://instagram.com',
-      tt: 'https://tiktok.com',
-      wa: 'https://wa.me'
-    },
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'store2',
-    name: 'Brand Two - Luxury Wear',
-    mode: 'LAUNCH_SOON',
-    brandName: 'Brand Two',
-    logoUrl: '',
-    headline: 'Grand Opening\nRevealing Very Soon',
-    subtitle: 'The new season collection drops in a few days. Join our VIP waitlist.',
-    launchDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    passcode: 'brand2vip',
-    socials: { fb: '', ig: '', tt: '', wa: '' },
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'store3',
-    name: 'Store 3 - Casuals',
-    mode: 'LIVE',
-    brandName: 'Store Three',
-    logoUrl: '',
-    headline: 'New Arrivals Coming Soon',
-    subtitle: 'Stay tuned for our latest drops and exclusive promotions.',
-    launchDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    passcode: 'vip2026',
-    socials: { fb: '', ig: '', tt: '', wa: '' },
-    updatedAt: new Date().toISOString()
-  }
-];
+const DEFAULT_STORES = [];
 
 function readJSON(file, defaultData) {
   try {

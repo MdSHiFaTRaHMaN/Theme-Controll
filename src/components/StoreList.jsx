@@ -111,8 +111,9 @@ export default function StoreList({
       {/* Stores List */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[600px]">
         {filteredStores.length === 0 ? (
-          <div className="text-center py-8 text-slate-500 text-xs">
-            No stores match your search.
+          <div className="text-center py-10 text-slate-400 text-xs space-y-1">
+            <p className="font-semibold text-slate-300">No stores connected yet.</p>
+            <p className="text-[11px] text-slate-500">Click <strong>"+ Add Store"</strong> above to connect your Shopify store.</p>
           </div>
         ) : (
           filteredStores.map((store) => {

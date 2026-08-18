@@ -67,7 +67,7 @@ export default function LivePreview({ store }) {
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: subEmail, storeId: store?.id || 'singhclo' }),
+        body: JSON.stringify({ email: subEmail, storeId: store?.id || '' }),
       });
       const data = await res.json();
       if (data && data.success) {
@@ -205,7 +205,7 @@ export default function LivePreview({ store }) {
                     />
                   ) : (
                     <h3 className="text-sm sm:text-base font-extrabold tracking-widest uppercase bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
-                      {store?.brandName || store?.name || 'SINGHCLO'}
+                      {store?.brandName || store?.name || 'YOUR BRAND'}
                     </h3>
                   )}
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-[10px] font-bold text-indigo-300 tracking-wider">
@@ -297,7 +297,7 @@ export default function LivePreview({ store }) {
 
                 {/* Footer with VIP Admin Unlock */}
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>&copy; {new Date().getFullYear()} {store?.brandName || 'SinghClo'}</span>
+                  <span>&copy; {new Date().getFullYear()} {store?.brandName || store?.name || 'Store'}</span>
                   <button
                     onClick={() => setShowVipModal(true)}
                     className="text-slate-400 hover:text-slate-200 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded"
