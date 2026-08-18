@@ -84,7 +84,13 @@ function readJSONFile(file, defaultVal) {
   try {
     if (fs.existsSync(file)) {
       const data = fs.readFileSync(file, 'utf8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
+        return parsed;
+      }
     }
   } catch (e) {
     console.error(`Error reading ${file}:`, e);
@@ -205,25 +211,47 @@ export async function getAllStores() {
   }));
 }
 
-export async function findStoreByDomainOrTheme(domain = '', themeId = '', storeId = '', autoCreateData = null) {
-  const cleanDomain = String(domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const cleanThemeId = String(themeId || '').trim();
-  const cleanId = String(storeId || '').trim().toLowerCase();
+export async function findStoreByDomainOrTheme(domain = '', customDomain = '', themeId = '', storeId = '', autoCreateData = null) {
+  let actualDomain = domain;
+  let actualCustomDomain = customDomain;
+  let actualThemeId = themeId;
+  let actualStoreId = storeId;
+  
+  // Handle legacy 3/4-argument call signature
+  if (typeof customDomain === 'string' && (customDomain.match(/^\d+$/) || !customDomain.includes('.'))) {
+    actualCustomDomain = '';
+    actualThemeId = customDomain;
+    actualStoreId = themeId;
+    if (storeId && typeof storeId === 'object') {
+      autoCreateData = storeId;
+    }
+  }
+
+  const normalizeDomain = (d) => String(d || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/^www\./, '');
+  const cleanDomain = normalizeDomain(actualDomain);
+  const cleanCustomDomain = normalizeDomain(actualCustomDomain);
+  const cleanThemeId = String(actualThemeId || '').trim();
+  const cleanId = String(actualStoreId || '').trim().toLowerCase();
+
+  const domainPrefix = cleanDomain ? cleanDomain.replace(/\.myshopify\.com$/, '') : '';
+  const customDomainPrefix = cleanCustomDomain ? cleanCustomDomain.replace(/\.myshopify\.com$/, '') : '';
 
   const { isMongo } = await connectDB();
   if (isMongo) {
     try {
       const orConditions = [];
+      if (cleanId) orConditions.push({ id: cleanId });
       if (cleanDomain) {
         orConditions.push({ domain: cleanDomain });
-        orConditions.push({ id: cleanDomain.replace(/\.myshopify\.com$/, '') });
+        orConditions.push({ domain: `https://${cleanDomain}` });
+        if (domainPrefix) orConditions.push({ id: domainPrefix });
       }
-      if (cleanThemeId) {
-        orConditions.push({ themeId: cleanThemeId });
+      if (cleanCustomDomain) {
+        orConditions.push({ domain: cleanCustomDomain });
+        orConditions.push({ domain: `https://${cleanCustomDomain}` });
+        if (customDomainPrefix) orConditions.push({ id: customDomainPrefix });
       }
-      if (cleanId) {
-        orConditions.push({ id: cleanId });
-      }
+      if (cleanThemeId) orConditions.push({ themeId: cleanThemeId });
 
       if (orConditions.length > 0) {
         const store = await Store.findOne({ $or: orConditions }).lean();
@@ -247,9 +275,20 @@ export async function findStoreByDomainOrTheme(domain = '', themeId = '', storeI
 
   const stores = readJSONFile(STORES_FILE, DEFAULT_STORES);
   const found = stores.find(s => {
-    if (cleanDomain && (s.domain?.toLowerCase() === cleanDomain || s.id?.toLowerCase() === cleanDomain || s.id?.toLowerCase() === cleanDomain.replace(/\.myshopify\.com$/, ''))) return true;
+    const sId = (s.id || '').toLowerCase();
+    const sDomain = normalizeDomain(s.domain || '');
+    
+    if (cleanId && sId === cleanId) return true;
     if (cleanThemeId && s.themeId && String(s.themeId) === cleanThemeId) return true;
-    if (cleanId && s.id?.toLowerCase() === cleanId) return true;
+    
+    if (cleanDomain) {
+      if (sDomain && (sDomain === cleanDomain || sDomain === domainPrefix)) return true;
+      if (sId === cleanDomain || sId === domainPrefix) return true;
+    }
+    if (cleanCustomDomain) {
+      if (sDomain && (sDomain === cleanCustomDomain || sDomain === customDomainPrefix)) return true;
+      if (sId === cleanCustomDomain || sId === customDomainPrefix) return true;
+    }
     return false;
   });
 
@@ -263,18 +302,29 @@ export async function findStoreByDomainOrTheme(domain = '', themeId = '', storeI
     };
   }
 
+  // Fallback: If exactly 1 store exists in database, return that store so single store setup works smoothly
+  if (stores.length === 1) {
+    return {
+      ...stores[0],
+      showHomepage: stores[0].showHomepage !== undefined ? stores[0].showHomepage : stores[0].mode === 'LIVE',
+      domain: stores[0].domain || '',
+      themeId: stores[0].themeId || '',
+      targetScope: stores[0].targetScope || 'homepage_only',
+    };
+  }
+
   // Auto-register new store if requested
   if (autoCreateData) {
     try {
-      const generatedId = cleanId || (cleanDomain ? cleanDomain.replace(/[^a-z0-9-_]/g, '-').replace(/-myshopify-com$/, '') : 'store_' + Date.now().toString(36));
+      const generatedId = cleanId || domainPrefix || customDomainPrefix || ('store_' + Date.now().toString(36));
       const newStore = await addStore({
         id: generatedId,
         name: autoCreateData.name || cleanDomain || generatedId,
         brandName: autoCreateData.brandName || autoCreateData.name || generatedId,
-        domain: cleanDomain,
+        domain: cleanDomain || cleanCustomDomain,
         themeId: cleanThemeId,
-        mode: 'LIVE',
-        showHomepage: true,
+        mode: autoCreateData.mode || 'LAUNCH_SOON',
+        showHomepage: autoCreateData.showHomepage !== undefined ? autoCreateData.showHomepage : false,
         targetScope: 'homepage_only',
       });
       return newStore;

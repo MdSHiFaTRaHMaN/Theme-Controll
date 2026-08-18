@@ -126,7 +126,7 @@ export default function StoreEditor({
   };
 
   const handleCopyLiquidSnippet = () => {
-    const code = `{% render 'store-mode-controller' %}`;
+    const code = `{% render 'store-mode-controller', store_id: '${store.id}' %}`;
     navigator.clipboard.writeText(code);
     setCopiedLiquid(true);
     setTimeout(() => setCopiedLiquid(false), 2000);

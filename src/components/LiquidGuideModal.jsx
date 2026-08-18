@@ -75,7 +75,7 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
             </p>
           </div>
 
-          {/* STEP 2 - AUTOMATIC (RECOMMENDED) */}
+          {/* STEP 2 - RECOMMENDED TAG WITH STORE ID */}
           <div className="p-3.5 rounded-xl bg-black/30 border border-indigo-500/40 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-white flex items-center gap-1.5">
@@ -83,18 +83,18 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
                 Step 2: Render Snippet in theme.liquid
               </span>
               <button
-                onClick={() => handleCopy(autoTag, 'auto')}
+                onClick={() => handleCopy(customTag, 'custom')}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 text-[11px] font-semibold transition-colors"
               >
-                {copiedAutoTag ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedAutoTag ? 'Copied!' : 'Copy Render Tag'}</span>
+                {copiedCustomTag ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                <span>{copiedCustomTag ? 'Copied!' : 'Copy Tag (With Store ID)'}</span>
               </button>
             </div>
             <p className="text-slate-300 leading-relaxed">
               Open <code className="text-indigo-300">layout/theme.liquid</code>, find the <code className="text-indigo-300">&lt;body&gt;</code> opening tag, and paste this line right below it:
             </p>
             <pre className="p-2.5 rounded-lg bg-black/60 border border-white/10 font-mono text-[11px] text-emerald-300 overflow-x-auto">
-              {autoTag}
+              {customTag}
             </pre>
           </div>
 

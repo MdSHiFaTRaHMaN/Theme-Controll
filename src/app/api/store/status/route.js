@@ -14,21 +14,21 @@ export async function GET(request) {
     const storeId = searchParams.get('store_id') || searchParams.get('id') || '';
     const shopName = searchParams.get('name') || searchParams.get('brand') || '';
 
-    // Primary lookup using domain, themeId, or storeId
-    let store = await findStoreByDomainOrTheme(domain || customDomain, themeId, storeId);
+    // Primary lookup using domain, customDomain, themeId, or storeId
+    let store = await findStoreByDomainOrTheme(domain, customDomain, themeId, storeId);
 
-    // Fallback: If not found and shopName / domain exists, auto-register as LIVE / show_homepage: true
+    // Fallback: If not found and shopName / domain exists, auto-register as LAUNCH_SOON (Coming Soon mode)
     if (!store && (domain || customDomain || storeId)) {
       const targetDomain = domain || customDomain;
       const targetId = storeId || (targetDomain ? targetDomain.replace(/[^a-z0-9-_]/g, '-').replace(/-myshopify-com$/, '') : 'store_' + Date.now().toString(36));
       
-      store = await findStoreByDomainOrTheme(targetDomain, themeId, targetId, {
+      store = await findStoreByDomainOrTheme(domain, customDomain, themeId, targetId, {
         name: shopName || targetDomain || targetId,
         brandName: shopName || targetDomain || targetId,
         domain: targetDomain,
         themeId: themeId,
-        mode: 'LIVE',
-        showHomepage: true,
+        mode: 'LAUNCH_SOON',
+        showHomepage: false,
         targetScope: 'homepage_only',
       });
     }
@@ -45,20 +45,20 @@ export async function GET(request) {
       });
     }
 
-    // Default safe fallback if totally unmapped: Show live homepage so store is never blocked
+    // Default fallback if unmapped: Respect Coming Soon launch mode
     return jsonResponse({
       success: true,
-      show_homepage: true,
-      show_homepage_text: 'yes',
-      mode: 'LIVE',
+      show_homepage: false,
+      show_homepage_text: 'no',
+      mode: 'LAUNCH_SOON',
       scope: 'homepage_only',
-      message: 'Store auto-allowed in default live mode',
+      message: 'Store defaulted to launch soon mode',
       store: {
         id: storeId || 'unknown',
         domain: domain || '',
         themeId: themeId || '',
-        showHomepage: true,
-        mode: 'LIVE',
+        showHomepage: false,
+        mode: 'LAUNCH_SOON',
         targetScope: 'homepage_only',
         brandName: shopName || 'Shopify Store',
         headline: 'Coming Soon',
