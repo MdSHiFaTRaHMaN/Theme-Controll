@@ -1,5 +1,6 @@
 import { bulkToggleStores, getSubscribers, getDbStatus } from '@/lib/db';
 import { jsonResponse, handleOptions } from '@/lib/cors';
+import { isAuthorized } from '@/lib/auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -7,6 +8,9 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
+    if (!isAuthorized(request)) {
+      return jsonResponse({ success: false, message: 'Unauthorized access' }, 401);
+    }
     const body = await request.json();
     const mode = body.mode === 'LAUNCH_SOON' ? 'LAUNCH_SOON' : 'LIVE';
     const stores = await bulkToggleStores(mode);

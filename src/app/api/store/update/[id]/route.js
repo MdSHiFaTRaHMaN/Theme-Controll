@@ -1,5 +1,6 @@
 import { updateStore } from '@/lib/db';
 import { jsonResponse, handleOptions } from '@/lib/cors';
+import { isAuthorized } from '@/lib/auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -7,6 +8,9 @@ export async function OPTIONS() {
 
 export async function POST(request, { params }) {
   try {
+    if (!isAuthorized(request)) {
+      return jsonResponse({ success: false, message: 'Unauthorized access' }, 401);
+    }
     const { id } = params;
     const body = await request.json();
     const store = await updateStore(id, body);

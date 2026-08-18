@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layers, Database, RefreshCw, Users, Code, Plus, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Layers, Database, RefreshCw, Users, Code, Plus, ExternalLink, CheckCircle2, AlertCircle, LogOut } from 'lucide-react';
 
 export default function Header({
   dbStatus,
@@ -10,6 +10,7 @@ export default function Header({
   onOpenAddStore,
   onOpenLeads,
   onOpenLiquidGuide,
+  onLogout,
   totalLeads = 0,
 }) {
   const isMongo = dbStatus?.isMongo;
@@ -104,6 +105,17 @@ export default function Header({
             <Plus className="w-4 h-4" />
             <span>Add Store</span>
           </button>
+
+          {/* Logout Button */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/30 transition-all active:scale-95"
+              title="Logout from Dashboard"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </header>

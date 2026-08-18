@@ -17,7 +17,7 @@ export async function GET(request) {
     // Primary lookup using domain, customDomain, themeId, or storeId
     let store = await findStoreByDomainOrTheme(domain, customDomain, themeId, storeId);
 
-    // Fallback: If not found and shopName / domain exists, auto-register as LAUNCH_SOON (Coming Soon mode)
+    // Fallback: If not found and shopName / domain / storeId exists, auto-register as LIVE (No disruption by default)
     if (!store && (domain || customDomain || storeId)) {
       const targetDomain = domain || customDomain;
       const targetId = storeId || (targetDomain ? targetDomain.replace(/[^a-z0-9-_]/g, '-').replace(/-myshopify-com$/, '') : 'store_' + Date.now().toString(36));
@@ -27,8 +27,8 @@ export async function GET(request) {
         brandName: shopName || targetDomain || targetId,
         domain: targetDomain,
         themeId: themeId,
-        mode: 'LAUNCH_SOON',
-        showHomepage: false,
+        mode: 'LIVE',
+        showHomepage: true,
         targetScope: 'homepage_only',
       });
     }
@@ -45,20 +45,20 @@ export async function GET(request) {
       });
     }
 
-    // Default fallback if unmapped: Respect Coming Soon launch mode
+    // Default safe fallback if unmapped: Show live homepage so store is never disrupted by default
     return jsonResponse({
       success: true,
-      show_homepage: false,
-      show_homepage_text: 'no',
-      mode: 'LAUNCH_SOON',
+      show_homepage: true,
+      show_homepage_text: 'yes',
+      mode: 'LIVE',
       scope: 'homepage_only',
-      message: 'Store defaulted to launch soon mode',
+      message: 'Store defaulted to live mode',
       store: {
         id: storeId || 'unknown',
         domain: domain || '',
         themeId: themeId || '',
-        showHomepage: false,
-        mode: 'LAUNCH_SOON',
+        showHomepage: true,
+        mode: 'LIVE',
         targetScope: 'homepage_only',
         brandName: shopName || 'Shopify Store',
         headline: 'Coming Soon',

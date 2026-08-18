@@ -1,5 +1,6 @@
 import { getSubscribers, deleteSubscriber } from '@/lib/db';
 import { jsonResponse, handleOptions } from '@/lib/cors';
+import { isAuthorized } from '@/lib/auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -7,6 +8,9 @@ export async function OPTIONS() {
 
 export async function GET(request) {
   try {
+    if (!isAuthorized(request)) {
+      return jsonResponse({ success: false, message: 'Unauthorized access' }, 401);
+    }
     const { searchParams } = new URL(request.url);
     const storeId = searchParams.get('storeId');
     const subscribers = await getSubscribers(storeId);

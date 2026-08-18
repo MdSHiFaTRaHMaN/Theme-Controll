@@ -1,5 +1,6 @@
 import { getStoreById, deleteStore } from '@/lib/db';
 import { jsonResponse, handleOptions } from '@/lib/cors';
+import { isAuthorized } from '@/lib/auth';
 
 export async function OPTIONS() {
   return handleOptions();

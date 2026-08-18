@@ -9,9 +9,14 @@ import LivePreview from '../components/LivePreview';
 import AddStoreModal from '../components/AddStoreModal';
 import LeadsModal from '../components/LeadsModal';
 import LiquidGuideModal from '../components/LiquidGuideModal';
+import LoginPage from '../components/LoginPage';
 import { CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function DashboardPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authToken, setAuthToken] = useState('');
+  const [authChecking, setAuthChecking] = useState(true);
+
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [stats, setStats] = useState({ total: 0, live: 0, launchSoon: 0, leads: 0 });
@@ -36,11 +41,22 @@ export default function DashboardPage() {
     }, 3500);
   };
 
+  // Helper for auth headers
+  const getAuthHeaders = (tokenOverride = null) => {
+    const token = tokenOverride || authToken || localStorage.getItem('dashboard_auth_token') || sessionStorage.getItem('dashboard_auth_token') || '';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
+
   // Fetch initial data
-  const fetchData = async () => {
+  const fetchData = async (overrideToken = null) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/stores');
+      const res = await fetch('/api/stores', {
+        headers: getAuthHeaders(overrideToken),
+      });
       const data = await res.json();
       if (data && data.success) {
         setStores(data.stores || []);
@@ -54,6 +70,8 @@ export default function DashboardPage() {
           const fresh = data.stores.find((s) => s.id === selectedStore.id);
           if (fresh) setSelectedStore(fresh);
         }
+      } else if (res.status === 401) {
+        setIsAuthenticated(false);
       }
     } catch (err) {
       console.error('Error fetching stores:', err);
@@ -63,9 +81,52 @@ export default function DashboardPage() {
     }
   };
 
+  // Auth verification check on mount
   useEffect(() => {
-    fetchData();
+    const checkAuth = async () => {
+      const token = localStorage.getItem('dashboard_auth_token') || sessionStorage.getItem('dashboard_auth_token');
+      if (!token) {
+        setAuthChecking(false);
+        setIsAuthenticated(false);
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/verify', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data && data.success && data.authorized) {
+          setAuthToken(token);
+          setIsAuthenticated(true);
+          fetchData(token);
+        } else {
+          localStorage.removeItem('dashboard_auth_token');
+          sessionStorage.removeItem('dashboard_auth_token');
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        setIsAuthenticated(false);
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+    checkAuth();
   }, []);
+
+  const handleLoginSuccess = (token) => {
+    setAuthToken(token);
+    setIsAuthenticated(true);
+    fetchData(token);
+    showToast('🔑 Successfully authenticated!');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('dashboard_auth_token');
+    sessionStorage.removeItem('dashboard_auth_token');
+    setAuthToken('');
+    setIsAuthenticated(false);
+    showToast('Logged out');
+  };
 
   const [bulkToggling, setBulkToggling] = useState(false);
 
@@ -75,7 +136,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`/api/store/toggle/${storeId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ mode: targetMode }),
       });
       const data = await res.json();
@@ -112,7 +173,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/stores/bulk-toggle', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ mode: targetMode }),
       });
       const data = await res.json();
@@ -140,7 +201,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`/api/store/update/${storeId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(updatePayload),
       });
       const data = await res.json();
@@ -165,7 +226,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/store/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(newStoreData),
       });
       const data = await res.json();
@@ -195,7 +256,10 @@ export default function DashboardPage() {
       return;
     }
     try {
-      const res = await fetch(`/api/store/${storeId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/store/${storeId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       const data = await res.json();
       if (data && data.success) {
         const remaining = stores.filter((s) => s.id !== storeId);
@@ -209,6 +273,21 @@ export default function DashboardPage() {
       showToast('Error deleting store', 'error');
     }
   };
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-[#07080d] flex items-center justify-center p-4">
+        <div className="flex items-center gap-3 text-indigo-400 font-semibold text-sm">
+          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+          <span>Verifying security credentials...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -235,11 +314,12 @@ export default function DashboardPage() {
       {/* Header */}
       <Header
         dbStatus={dbStatus}
-        onRefresh={fetchData}
+        onRefresh={() => fetchData()}
         loading={loading}
         onOpenAddStore={() => setIsAddStoreOpen(true)}
         onOpenLeads={() => setIsLeadsOpen(true)}
         onOpenLiquidGuide={() => setIsGuideOpen(true)}
+        onLogout={handleLogout}
         totalLeads={stats.leads}
       />
 
