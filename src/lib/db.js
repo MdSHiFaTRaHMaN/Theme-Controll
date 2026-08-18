@@ -14,6 +14,10 @@ const DEFAULT_STORES = [
     id: 'singhclo',
     name: 'SinghClo Main Store',
     mode: 'LIVE',
+    showHomepage: true,
+    domain: 'singhclo.myshopify.com',
+    themeId: '',
+    targetScope: 'homepage_only',
     brandName: 'SinghClo',
     logoUrl: '',
     headline: 'Something Extraordinary\nIs On The Way',
@@ -31,7 +35,11 @@ const DEFAULT_STORES = [
   {
     id: 'store2',
     name: 'Brand Two - Luxury Wear',
-    mode: 'LAUNCH_SOON',
+    mode: 'LIVE',
+    showHomepage: true,
+    domain: 'brandtwo.myshopify.com',
+    themeId: '',
+    targetScope: 'homepage_only',
     brandName: 'Brand Two',
     logoUrl: '',
     headline: 'Grand Opening\nRevealing Very Soon',
@@ -45,6 +53,10 @@ const DEFAULT_STORES = [
     id: 'store3',
     name: 'Store 3 - Casuals',
     mode: 'LIVE',
+    showHomepage: true,
+    domain: 'store3.myshopify.com',
+    themeId: '',
+    targetScope: 'homepage_only',
     brandName: 'Store Three',
     logoUrl: '',
     headline: 'New Arrivals Coming Soon',
@@ -172,6 +184,10 @@ export async function getAllStores() {
       return stores.map(s => ({
         ...s,
         _id: s._id.toString(),
+        showHomepage: s.showHomepage !== undefined ? s.showHomepage : s.mode === 'LIVE',
+        domain: s.domain || '',
+        themeId: s.themeId || '',
+        targetScope: s.targetScope || 'homepage_only',
         launchDate: s.launchDate ? new Date(s.launchDate).toISOString() : new Date().toISOString(),
         updatedAt: s.updatedAt ? new Date(s.updatedAt).toISOString() : new Date().toISOString(),
       }));
@@ -179,7 +195,95 @@ export async function getAllStores() {
       console.error('MongoDB find error, falling back to JSON:', e);
     }
   }
-  return readJSONFile(STORES_FILE, DEFAULT_STORES);
+  const localStores = readJSONFile(STORES_FILE, DEFAULT_STORES);
+  return localStores.map(s => ({
+    ...s,
+    showHomepage: s.showHomepage !== undefined ? s.showHomepage : s.mode === 'LIVE',
+    domain: s.domain || '',
+    themeId: s.themeId || '',
+    targetScope: s.targetScope || 'homepage_only',
+  }));
+}
+
+export async function findStoreByDomainOrTheme(domain = '', themeId = '', storeId = '', autoCreateData = null) {
+  const cleanDomain = String(domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const cleanThemeId = String(themeId || '').trim();
+  const cleanId = String(storeId || '').trim().toLowerCase();
+
+  const { isMongo } = await connectDB();
+  if (isMongo) {
+    try {
+      const orConditions = [];
+      if (cleanDomain) {
+        orConditions.push({ domain: cleanDomain });
+        orConditions.push({ id: cleanDomain.replace(/\.myshopify\.com$/, '') });
+      }
+      if (cleanThemeId) {
+        orConditions.push({ themeId: cleanThemeId });
+      }
+      if (cleanId) {
+        orConditions.push({ id: cleanId });
+      }
+
+      if (orConditions.length > 0) {
+        const store = await Store.findOne({ $or: orConditions }).lean();
+        if (store) {
+          return {
+            ...store,
+            _id: store._id.toString(),
+            showHomepage: store.showHomepage !== undefined ? store.showHomepage : store.mode === 'LIVE',
+            domain: store.domain || '',
+            themeId: store.themeId || '',
+            targetScope: store.targetScope || 'homepage_only',
+            launchDate: store.launchDate ? new Date(store.launchDate).toISOString() : new Date().toISOString(),
+            updatedAt: store.updatedAt ? new Date(store.updatedAt).toISOString() : new Date().toISOString(),
+          };
+        }
+      }
+    } catch (e) {
+      console.error('MongoDB findStoreByDomainOrTheme error:', e);
+    }
+  }
+
+  const stores = readJSONFile(STORES_FILE, DEFAULT_STORES);
+  const found = stores.find(s => {
+    if (cleanDomain && (s.domain?.toLowerCase() === cleanDomain || s.id?.toLowerCase() === cleanDomain || s.id?.toLowerCase() === cleanDomain.replace(/\.myshopify\.com$/, ''))) return true;
+    if (cleanThemeId && s.themeId && String(s.themeId) === cleanThemeId) return true;
+    if (cleanId && s.id?.toLowerCase() === cleanId) return true;
+    return false;
+  });
+
+  if (found) {
+    return {
+      ...found,
+      showHomepage: found.showHomepage !== undefined ? found.showHomepage : found.mode === 'LIVE',
+      domain: found.domain || '',
+      themeId: found.themeId || '',
+      targetScope: found.targetScope || 'homepage_only',
+    };
+  }
+
+  // Auto-register new store if requested
+  if (autoCreateData) {
+    try {
+      const generatedId = cleanId || (cleanDomain ? cleanDomain.replace(/[^a-z0-9-_]/g, '-').replace(/-myshopify-com$/, '') : 'store_' + Date.now().toString(36));
+      const newStore = await addStore({
+        id: generatedId,
+        name: autoCreateData.name || cleanDomain || generatedId,
+        brandName: autoCreateData.brandName || autoCreateData.name || generatedId,
+        domain: cleanDomain,
+        themeId: cleanThemeId,
+        mode: 'LIVE',
+        showHomepage: true,
+        targetScope: 'homepage_only',
+      });
+      return newStore;
+    } catch (err) {
+      console.error('Auto-registration error:', err);
+    }
+  }
+
+  return null;
 }
 
 export async function getStoreById(storeId, autoCreateData = null) {
@@ -192,6 +296,10 @@ export async function getStoreById(storeId, autoCreateData = null) {
         return {
           ...store,
           _id: store._id.toString(),
+          showHomepage: store.showHomepage !== undefined ? store.showHomepage : store.mode === 'LIVE',
+          domain: store.domain || '',
+          themeId: store.themeId || '',
+          targetScope: store.targetScope || 'homepage_only',
           launchDate: store.launchDate ? new Date(store.launchDate).toISOString() : new Date().toISOString(),
           updatedAt: store.updatedAt ? new Date(store.updatedAt).toISOString() : new Date().toISOString(),
         };
@@ -203,7 +311,15 @@ export async function getStoreById(storeId, autoCreateData = null) {
 
   const stores = readJSONFile(STORES_FILE, DEFAULT_STORES);
   const found = stores.find(s => s.id.toLowerCase() === cleanId);
-  if (found) return found;
+  if (found) {
+    return {
+      ...found,
+      showHomepage: found.showHomepage !== undefined ? found.showHomepage : found.mode === 'LIVE',
+      domain: found.domain || '',
+      themeId: found.themeId || '',
+      targetScope: found.targetScope || 'homepage_only',
+    };
+  }
 
   // Auto-register new store if requested
   if (autoCreateData) {
@@ -212,7 +328,11 @@ export async function getStoreById(storeId, autoCreateData = null) {
         id: cleanId,
         name: autoCreateData.name || cleanId,
         brandName: autoCreateData.brandName || autoCreateData.name || cleanId,
+        domain: autoCreateData.domain || '',
+        themeId: autoCreateData.themeId || '',
         mode: autoCreateData.mode || 'LIVE',
+        showHomepage: autoCreateData.showHomepage !== undefined ? autoCreateData.showHomepage : true,
+        targetScope: autoCreateData.targetScope || 'homepage_only',
       });
       return newStore;
     } catch (err) {
@@ -225,11 +345,12 @@ export async function getStoreById(storeId, autoCreateData = null) {
 
 export async function bulkToggleStores(targetMode) {
   const mode = targetMode === 'LAUNCH_SOON' ? 'LAUNCH_SOON' : 'LIVE';
+  const showHomepage = mode === 'LIVE';
   const { isMongo } = await connectDB();
 
   if (isMongo) {
     try {
-      await Store.updateMany({}, { mode, updatedAt: new Date() });
+      await Store.updateMany({}, { mode, showHomepage, updatedAt: new Date() });
       return getAllStores();
     } catch (e) {
       console.error('MongoDB bulk toggle error:', e);
@@ -240,27 +361,49 @@ export async function bulkToggleStores(targetMode) {
   const updated = stores.map(s => ({
     ...s,
     mode,
+    showHomepage,
     updatedAt: new Date().toISOString(),
   }));
   writeJSONFile(STORES_FILE, updated);
   return updated;
 }
 
-export async function toggleStoreMode(storeId, forcedMode = null) {
+export async function toggleStoreMode(storeId, forcedMode = null, forcedShowHomepage = null) {
   const cleanId = String(storeId || '').trim().toLowerCase();
   const { isMongo } = await connectDB();
+
+  let targetMode = forcedMode;
+  let targetShowHomepage = forcedShowHomepage;
+
+  if (targetShowHomepage !== null && targetShowHomepage !== undefined) {
+    const isYes = targetShowHomepage === true || targetShowHomepage === 'yes' || targetShowHomepage === 'true' || targetShowHomepage === 1;
+    targetShowHomepage = isYes;
+    targetMode = isYes ? 'LIVE' : 'LAUNCH_SOON';
+  } else if (targetMode) {
+    targetShowHomepage = targetMode === 'LIVE';
+  }
 
   if (isMongo) {
     try {
       const store = await Store.findOne({ id: cleanId });
       if (store) {
-        store.mode = forcedMode || (store.mode === 'LIVE' ? 'LAUNCH_SOON' : 'LIVE');
+        if (targetMode) {
+          store.mode = targetMode;
+          store.showHomepage = targetShowHomepage;
+        } else {
+          store.mode = store.mode === 'LIVE' ? 'LAUNCH_SOON' : 'LIVE';
+          store.showHomepage = store.mode === 'LIVE';
+        }
         store.updatedAt = new Date();
         await store.save();
         const obj = store.toObject();
         return {
           ...obj,
           _id: obj._id ? obj._id.toString() : undefined,
+          showHomepage: obj.showHomepage !== undefined ? obj.showHomepage : obj.mode === 'LIVE',
+          domain: obj.domain || '',
+          themeId: obj.themeId || '',
+          targetScope: obj.targetScope || 'homepage_only',
           launchDate: obj.launchDate ? new Date(obj.launchDate).toISOString() : new Date().toISOString(),
           updatedAt: obj.updatedAt ? new Date(obj.updatedAt).toISOString() : new Date().toISOString(),
         };
@@ -273,7 +416,14 @@ export async function toggleStoreMode(storeId, forcedMode = null) {
   const stores = readJSONFile(STORES_FILE, DEFAULT_STORES);
   const idx = stores.findIndex(s => s.id.toLowerCase() === cleanId);
   if (idx !== -1) {
-    stores[idx].mode = forcedMode || (stores[idx].mode === 'LIVE' ? 'LAUNCH_SOON' : 'LIVE');
+    if (targetMode) {
+      stores[idx].mode = targetMode;
+      stores[idx].showHomepage = targetShowHomepage;
+    } else {
+      const currentLive = stores[idx].showHomepage !== undefined ? stores[idx].showHomepage : stores[idx].mode === 'LIVE';
+      stores[idx].showHomepage = !currentLive;
+      stores[idx].mode = stores[idx].showHomepage ? 'LIVE' : 'LAUNCH_SOON';
+    }
     stores[idx].updatedAt = new Date().toISOString();
     writeJSONFile(STORES_FILE, stores);
     return stores[idx];
@@ -285,17 +435,29 @@ export async function updateStore(storeId, updateData) {
   const cleanId = String(storeId || '').trim().toLowerCase();
   const { isMongo } = await connectDB();
 
+  // Sync mode and showHomepage if either is provided
+  const sanitized = { ...updateData };
+  if (sanitized.showHomepage !== undefined && sanitized.mode === undefined) {
+    sanitized.mode = (sanitized.showHomepage === true || sanitized.showHomepage === 'yes') ? 'LIVE' : 'LAUNCH_SOON';
+  } else if (sanitized.mode !== undefined && sanitized.showHomepage === undefined) {
+    sanitized.showHomepage = sanitized.mode === 'LIVE';
+  }
+
   if (isMongo) {
     try {
       const updated = await Store.findOneAndUpdate(
         { id: cleanId },
-        { ...updateData, updatedAt: new Date() },
+        { ...sanitized, updatedAt: new Date() },
         { new: true, runValidators: true }
       ).lean();
       if (updated) {
         return {
           ...updated,
           _id: updated._id ? updated._id.toString() : undefined,
+          showHomepage: updated.showHomepage !== undefined ? updated.showHomepage : updated.mode === 'LIVE',
+          domain: updated.domain || '',
+          themeId: updated.themeId || '',
+          targetScope: updated.targetScope || 'homepage_only',
           launchDate: updated.launchDate ? new Date(updated.launchDate).toISOString() : new Date().toISOString(),
           updatedAt: updated.updatedAt ? new Date(updated.updatedAt).toISOString() : new Date().toISOString(),
         };
@@ -310,7 +472,7 @@ export async function updateStore(storeId, updateData) {
   if (idx !== -1) {
     stores[idx] = {
       ...stores[idx],
-      ...updateData,
+      ...sanitized,
       updatedAt: new Date().toISOString(),
     };
     writeJSONFile(STORES_FILE, stores);
@@ -327,10 +489,18 @@ export async function addStore(newStoreData) {
 
   const { isMongo } = await connectDB();
 
+  const isShowHome = newStoreData.showHomepage !== undefined
+    ? (newStoreData.showHomepage === true || newStoreData.showHomepage === 'yes')
+    : (newStoreData.mode === 'LIVE' || !newStoreData.mode);
+
   const storeObj = {
     id: cleanId,
     name: newStoreData.name.trim(),
-    mode: newStoreData.mode || 'LIVE',
+    mode: isShowHome ? 'LIVE' : (newStoreData.mode || 'LAUNCH_SOON'),
+    showHomepage: isShowHome,
+    domain: String(newStoreData.domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, ''),
+    themeId: String(newStoreData.themeId || '').trim(),
+    targetScope: newStoreData.targetScope || 'homepage_only',
     brandName: newStoreData.brandName || newStoreData.name,
     logoUrl: newStoreData.logoUrl || '',
     headline: newStoreData.headline || 'Something Extraordinary\nIs On The Way',

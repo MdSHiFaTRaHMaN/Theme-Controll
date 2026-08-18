@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Code, Copy, Check, ExternalLink, Sparkles, ShieldCheck, Zap, Layers } from 'lucide-react';
+import { X, Code, Copy, Check, ExternalLink, Sparkles, ShieldCheck, Zap, Layers, Globe, Sliders } from 'lucide-react';
 
 export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
   const [copiedStep1, setCopiedStep1] = useState(false);
@@ -39,22 +39,22 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
         {/* Title */}
         <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
           <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
-            <Layers className="w-5 h-5" />
+            <Sliders className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">Multi-Store Dynamic Setup Guide</h3>
+            <h3 className="text-base font-bold text-white">Store URL & Theme ID Setup Guide</h3>
             <p className="text-xs text-slate-400">
-              Connect 5, 10, or 50+ Shopify stores to this central Next.js dashboard.
+              Control Homepage Live (Yes) vs Coming Soon (No) dynamically for any Shopify store.
             </p>
           </div>
         </div>
 
         {/* Dynamic Concept Explanation */}
-        <div className="p-3 rounded-xl bg-indigo-950/30 border border-indigo-500/30 mb-4 flex items-start gap-2.5 text-xs text-indigo-200">
+        <div className="p-3.5 rounded-xl bg-indigo-950/30 border border-indigo-500/30 mb-4 flex items-start gap-2.5 text-xs text-indigo-200">
           <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
           <div>
-            <strong className="text-white block mb-0.5">⚡ 100% Dynamic Self-Discovery:</strong>
-            You only need to place the <code className="text-indigo-300">store-mode-controller.liquid</code> snippet in each Shopify store. Whenever any store loads, it <strong>automatically registers itself</strong> in your Next.js dashboard!
+            <strong className="text-white block mb-0.5">⚡ 100% Automatic Store URL & Theme ID Transmission:</strong>
+            When you insert <code className="text-indigo-300 font-mono">store-mode-controller.liquid</code> in your theme, Shopify automatically sends <code className="text-indigo-300 font-mono">shop.permanent_domain</code> and <code className="text-indigo-300 font-mono">theme.id</code> to this dashboard!
           </div>
         </div>
 
@@ -65,13 +65,13 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
             <div className="flex items-center justify-between">
               <span className="font-bold text-white flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">1</span>
-                Step 1: Add Snippet to each Shopify Store
+                Step 1: Add Snippet file in Shopify
               </span>
               <span className="text-[10px] text-slate-400">Snippets &rarr; store-mode-controller.liquid</span>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              In any Shopify store's admin: <strong>Online Store &rarr; Themes &rarr; Edit code &rarr; Add Snippet</strong>.<br />
-              Create <code className="text-indigo-300 font-mono">store-mode-controller.liquid</code> and paste the snippet code.
+              In Shopify Admin: <strong>Online Store &rarr; Themes &rarr; Edit code &rarr; Add new snippet</strong>.<br />
+              Name it <code className="text-indigo-300 font-mono">store-mode-controller.liquid</code> and paste the snippet code.
             </p>
           </div>
 
@@ -79,59 +79,51 @@ export default function LiquidGuideModal({ isOpen, onClose, selectedStore }) {
           <div className="p-3.5 rounded-xl bg-black/30 border border-indigo-500/40 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-white flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">2A</span>
-                Step 2 (Option A - Automatic Auto-ID):
+                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">2</span>
+                Step 2: Render Snippet in theme.liquid
               </span>
               <button
                 onClick={() => handleCopy(autoTag, 'auto')}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 text-[11px] font-semibold transition-colors"
               >
                 {copiedAutoTag ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedAutoTag ? 'Copied!' : 'Copy Auto Code'}</span>
+                <span>{copiedAutoTag ? 'Copied!' : 'Copy Render Tag'}</span>
               </button>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              Paste in <code className="text-indigo-300">layout/theme.liquid</code> under <code className="text-indigo-300">&lt;body&gt;</code>. It will <strong>automatically detect the store domain</strong> and connect to the dashboard:
+              Open <code className="text-indigo-300">layout/theme.liquid</code>, find the <code className="text-indigo-300">&lt;body&gt;</code> opening tag, and paste this line right below it:
             </p>
             <pre className="p-2.5 rounded-lg bg-black/60 border border-white/10 font-mono text-[11px] text-emerald-300 overflow-x-auto">
               {autoTag}
             </pre>
           </div>
 
-          {/* STEP 2 - CUSTOM ID */}
+          {/* STEP 3 - DASHBOARD YES/NO CONTROL */}
           <div className="p-3.5 rounded-xl bg-black/30 border border-white/10 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-white flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">2B</span>
-                Step 2 (Option B - Custom Store ID):
+                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">3</span>
+                Step 3: Control from Dashboard
               </span>
-              <button
-                onClick={() => handleCopy(customTag, 'custom')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 text-[11px] font-semibold transition-colors"
-              >
-                {copiedCustomTag ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedCustomTag ? 'Copied!' : 'Copy Custom Code'}</span>
-              </button>
+              <span className="text-[10px] text-emerald-400 font-bold">Live Instant Response</span>
             </div>
-            <p className="text-slate-300 leading-relaxed">
-              If you want a specific custom name (e.g. <code className="text-indigo-300">singhclo</code>, <code className="text-indigo-300">brand-two</code>, <code className="text-indigo-300">outlet-store</code>):
-            </p>
-            <pre className="p-2.5 rounded-lg bg-black/60 border border-white/10 font-mono text-[11px] text-indigo-200 overflow-x-auto">
-              {customTag}
-            </pre>
+            <ul className="text-slate-300 space-y-1.5 list-disc pl-4 leading-relaxed">
+              <li>Select <strong>YES (🟢 Show Homepage)</strong> in dashboard &rarr; Shopify instantly displays the normal homepage.</li>
+              <li>Select <strong>NO (⏳ Coming Soon)</strong> in dashboard &rarr; Shopify immediately displays the luxury pre-launch Coming Soon page.</li>
+            </ul>
           </div>
 
-          {/* STEP 3 - VIP ADMIN PREVIEW */}
+          {/* STEP 4 - VIP ADMIN PREVIEW */}
           <div className="p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/20 space-y-1.5">
             <div className="flex items-center gap-1.5 text-indigo-300 font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>Team & Owner VIP Live Bypass Link</span>
+              <span>Owner & VIP Live Bypass Key</span>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              To test the live site even when Launch Soon is active on any store:
+              To test the live site even when Coming Soon is active:
             </p>
             <code className="block p-2 rounded bg-black/50 font-mono text-[11px] text-emerald-300 break-all">
-              https://any-store.myshopify.com/?vip_pass={selectedStore?.passcode || 'vip2026'}
+              https://your-store.myshopify.com/?vip_pass={selectedStore?.passcode || 'vip2026'}
             </code>
           </div>
         </div>

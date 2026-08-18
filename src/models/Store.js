@@ -18,6 +18,26 @@ const StoreSchema = new mongoose.Schema({
     enum: ['LIVE', 'LAUNCH_SOON'],
     default: 'LIVE',
   },
+  showHomepage: {
+    type: Boolean,
+    default: true,
+  },
+  domain: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    default: '',
+  },
+  themeId: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  targetScope: {
+    type: String,
+    enum: ['homepage_only', 'all_pages'],
+    default: 'homepage_only',
+  },
   brandName: {
     type: String,
     default: '',

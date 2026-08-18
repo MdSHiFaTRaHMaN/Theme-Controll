@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Store, Zap, Clock, Globe, Trash2, ArrowRight, Check, Layers } from 'lucide-react';
+import { Search, Store, Zap, Clock, Globe, Trash2, ArrowRight, Check, Layers, Sliders } from 'lucide-react';
 
 export default function StoreList({
   stores = [],
@@ -17,13 +17,19 @@ export default function StoreList({
   const [filterMode, setFilterMode] = useState('ALL'); // 'ALL' | 'LIVE' | 'LAUNCH_SOON'
 
   const filteredStores = stores.filter((s) => {
+    const isLive = s.showHomepage !== undefined ? s.showHomepage : (s.mode === 'LIVE');
     const matchesSearch =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.id.toLowerCase().includes(search.toLowerCase()) ||
+      (s.domain && s.domain.toLowerCase().includes(search.toLowerCase())) ||
       (s.brandName && s.brandName.toLowerCase().includes(search.toLowerCase()));
 
     const matchesFilter =
-      filterMode === 'ALL' ? true : s.mode === filterMode;
+      filterMode === 'ALL'
+        ? true
+        : filterMode === 'LIVE'
+        ? isLive
+        : !isLive;
 
     return matchesSearch && matchesFilter;
   });
@@ -36,10 +42,10 @@ export default function StoreList({
           <div className="flex items-center gap-2">
             <Store className="w-4 h-4 text-indigo-400" />
             <h2 className="text-xs font-bold text-white tracking-wide uppercase">
-              All Stores ({stores.length})
+              Connected Stores ({stores.length})
             </h2>
           </div>
-          <span className="text-[10px] text-slate-400 font-medium">Multi-Store Switcher</span>
+          <span className="text-[10px] text-slate-400 font-medium">Store URL & ID Switcher</span>
         </div>
 
         {/* Bulk Action Controls */}
@@ -58,16 +64,16 @@ export default function StoreList({
               title="Turn all connected stores to Live website"
             >
               <Globe className="w-3 h-3 text-emerald-400" />
-              <span>All 🟢 Live</span>
+              <span>All YES 🟢 Live</span>
             </button>
             <button
               onClick={() => onBulkToggle('LAUNCH_SOON')}
               disabled={bulkToggling || stores.length === 0}
               className="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-bold flex items-center justify-center gap-1 transition-all active:scale-95 disabled:opacity-50"
-              title="Turn all connected stores to Launch Soon Coming Soon page"
+              title="Turn all connected stores to Coming Soon page"
             >
               <Clock className="w-3 h-3 text-amber-400" />
-              <span>All ⏳ Launch</span>
+              <span>All NO ⏳ Launch</span>
             </button>
           </div>
         </div>
@@ -79,7 +85,7 @@ export default function StoreList({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search store name or id..."
+            placeholder="Search domain, name, or id..."
             className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
@@ -96,7 +102,7 @@ export default function StoreList({
                   : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              {f === 'ALL' ? 'All' : f === 'LIVE' ? '🟢 Live' : '⏳ Launch'}
+              {f === 'ALL' ? 'All Stores' : f === 'LIVE' ? '🟢 Homepage YES' : '⏳ Coming Soon NO'}
             </button>
           ))}
         </div>
@@ -111,7 +117,7 @@ export default function StoreList({
         ) : (
           filteredStores.map((store) => {
             const isSelected = selectedStore?.id === store.id;
-            const isLive = store.mode === 'LIVE';
+            const isLive = store.showHomepage !== undefined ? store.showHomepage : (store.mode === 'LIVE');
             const isToggling = togglingId === store.id;
 
             return (
@@ -135,10 +141,16 @@ export default function StoreList({
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 ring-2 ring-indigo-400/30 flex-shrink-0" />
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] font-mono text-slate-400 bg-white/5 px-1.5 py-0.2 rounded">
-                        {store.id}
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[9px] font-mono text-slate-400 bg-white/5 px-1.5 py-0.5 rounded">
+                        id: {store.id}
                       </span>
+                      {store.domain && (
+                        <span className="text-[9px] font-mono text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <Globe className="w-2 h-2" />
+                          {store.domain}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -146,10 +158,10 @@ export default function StoreList({
                   <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     {/* Mode Status Pill */}
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border ${
                         isLive
-                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                          : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
                       }`}
                     >
                       <span
@@ -157,14 +169,14 @@ export default function StoreList({
                           isLive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
                         }`}
                       />
-                      {isLive ? 'Live' : 'Launch'}
+                      {isLive ? 'YES (Live)' : 'NO (Launch)'}
                     </span>
 
                     {/* Quick Switch Button */}
                     <button
                       onClick={() => onQuickToggle(store.id, isLive ? 'LAUNCH_SOON' : 'LIVE')}
                       disabled={isToggling}
-                      title={`Switch to ${isLive ? 'Launch Soon' : 'Live'}`}
+                      title={`Toggle: ${isLive ? 'Turn to Coming Soon (NO)' : 'Turn to Live (YES)'}`}
                       className={`p-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-90 ${
                         isLive
                           ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 hover:border-amber-500/60'

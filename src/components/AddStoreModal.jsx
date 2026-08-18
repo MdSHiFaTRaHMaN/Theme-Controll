@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Plus, Store, KeyRound, Globe, Sparkles } from 'lucide-react';
+import { X, Plus, Store, KeyRound, Globe, Sparkles, Sliders } from 'lucide-react';
 
 export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
   const [storeId, setStoreId] = useState('');
   const [name, setName] = useState('');
+  const [domain, setDomain] = useState('');
+  const [themeId, setThemeId] = useState('');
   const [brandName, setBrandName] = useState('');
   const [mode, setMode] = useState('LIVE');
   const [passcode, setPasscode] = useState('vip2026');
@@ -32,12 +34,18 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
         id: cleanId,
         name: name.trim(),
         brandName: brandName.trim() || name.trim(),
+        domain: domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, ''),
+        themeId: themeId.trim(),
         mode,
+        showHomepage: mode === 'LIVE',
+        targetScope: 'homepage_only',
         passcode: passcode.trim() || 'vip2026',
       });
       // Reset
       setStoreId('');
       setName('');
+      setDomain('');
+      setThemeId('');
       setBrandName('');
       setMode('LIVE');
       setPasscode('vip2026');
@@ -49,7 +57,7 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-[#121524] border border-white/15 rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-[#121524] border border-white/15 rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -65,7 +73,7 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Add New Shopify Store</h3>
-            <p className="text-xs text-slate-400">Connect another store to the central controller.</p>
+            <p className="text-xs text-slate-400">Connect another store by Domain, Theme ID or Store ID.</p>
           </div>
         </div>
 
@@ -78,7 +86,7 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-1">
-              Store ID (Unique slug for Shopify liquid) <span className="text-rose-400">*</span>
+              Store ID (Unique Identifier) <span className="text-rose-400">*</span>
             </label>
             <input
               type="text"
@@ -88,9 +96,6 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
               className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               required
             />
-            <span className="text-[10px] text-slate-500 mt-0.5 block">
-              You will use this in Shopify: <code className="text-indigo-300">store_id: '{storeId || 'your_id'}'</code>
-            </span>
           </div>
 
           <div>
@@ -101,7 +106,7 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. SinghClo Main Official Store"
+              placeholder="e.g. SinghClo Official Store"
               className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               required
             />
@@ -109,29 +114,45 @@ export default function AddStoreModal({ isOpen, onClose, onAddStore, adding }) {
 
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-1">
-              Brand Display Name (Optional)
+              Store Domain / URL (Optional)
             </label>
             <input
               type="text"
-              value={brandName}
-              onChange={(e) => setBrandName(e.target.value)}
-              placeholder="e.g. SinghClo"
-              className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              placeholder="e.g. mystore.myshopify.com or brand.com"
+              className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+            <span className="text-[10px] text-slate-400 mt-0.5 block">
+              Allows auto-matching from <code className="text-indigo-300 font-mono">shop.permanent_domain</code>.
+            </span>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
+              Shopify Theme ID (Optional)
+            </label>
+            <input
+              type="text"
+              value={themeId}
+              onChange={(e) => setThemeId(e.target.value)}
+              placeholder="e.g. 142981928412"
+              className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Initial Mode
+                Homepage Visibility
               </label>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-indigo-500"
               >
-                <option value="LIVE">🟢 Live Online Store</option>
-                <option value="LAUNCH_SOON">⏳ Launch Soon VIP</option>
+                <option value="LIVE">🟢 YES (Show Live Homepage)</option>
+                <option value="LAUNCH_SOON">⏳ NO (Show Coming Soon)</option>
               </select>
             </div>
 

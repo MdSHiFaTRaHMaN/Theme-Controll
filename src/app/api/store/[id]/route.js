@@ -20,15 +20,27 @@ export async function GET(request, { params }) {
     });
 
     if (store) {
-      return jsonResponse({ success: true, store });
+      const showHomepage = store.showHomepage !== undefined ? Boolean(store.showHomepage) : (store.mode === 'LIVE');
+      return jsonResponse({
+        success: true,
+        show_homepage: showHomepage,
+        show_homepage_text: showHomepage ? 'yes' : 'no',
+        mode: showHomepage ? 'LIVE' : 'LAUNCH_SOON',
+        scope: store.targetScope || 'homepage_only',
+        store
+      });
     }
 
     return jsonResponse({
       success: false,
+      show_homepage: true,
+      show_homepage_text: 'yes',
       message: 'Store not found',
       store: {
         id,
         mode: 'LIVE',
+        showHomepage: true,
+        targetScope: 'homepage_only',
         brandName: id,
         headline: 'Coming Soon',
         subtitle: 'Store launching soon.',
